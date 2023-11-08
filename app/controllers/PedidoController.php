@@ -67,9 +67,9 @@ class PedidoController extends Pedido implements IApiUsable
 
     public function BorrarUno($request, $response, $args)
     {
-        $parametros = $request->getParsedBody();
+        //$parametros = $request->getParsedBody();
 
-        $id = $parametros['id'];
+        $id = $args['id'];
         Pedido::borrarPedido($id);
 
         $payload = json_encode(array("mensaje" => "Pedido borrado con exito"));
