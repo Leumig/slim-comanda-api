@@ -5,22 +5,40 @@ class Producto
     public $id;
     public $descripcion;
     public $tipo;
+    public $sector;
+    public $tiempoEstimado;
+    public $precio;
+    public $estado;
 
     public function crearProducto()
     {
-        $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO productos (descripcion, tipo) VALUES (:descripcion, :tipo)");
-        $consulta->bindValue(':descripcion', $this->descripcion, PDO::PARAM_STR);
-        $consulta->bindValue(':tipo', $this->tipo, PDO::PARAM_STR);
-        $consulta->execute();
+        $retorno = 'Error al obtener el ultimo ID insertado';
 
-        return $objAccesoDatos->obtenerUltimoId();
+        try {
+            $objAccesoDatos = AccesoDatos::obtenerInstancia();
+            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO productos (descripcion, tipo, sector, tiempoEstimado, precio, estado) VALUES (:descripcion, :tipo, :sector, :tiempoEstimado, :precio, :estado)");
+    
+            $estado = 'Activo';
+            $consulta->bindValue(':descripcion', $this->descripcion, PDO::PARAM_STR);
+            $consulta->bindValue(':tipo', $this->tipo, PDO::PARAM_STR);
+            $consulta->bindValue(':sector', $this->sector, PDO::PARAM_STR);
+            $consulta->bindValue(':tiempoEstimado', $this->tiempoEstimado, PDO::PARAM_STR);
+            $consulta->bindValue(':precio', $this->precio);
+            $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+            $consulta->execute();
+
+            $retorno = $objAccesoDatos->obtenerUltimoId();
+        } catch (PDOException $e) {
+            $retorno = 'Error al ejecutar la consulta: ' . $e->getMessage();
+        }
+
+        return $retorno;
     }
 
     public static function obtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, descripcion, tipo FROM productos");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, descripcion, tipo, sector, tiempoEstimado, precio, estado FROM productos WHERE estado != 'Eliminado'");
         $consulta->execute();
 
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Producto');
@@ -29,31 +47,65 @@ class Producto
     public static function obtenerProducto($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, descripcion, tipo FROM productos WHERE id = :id");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, descripcion, tipo, sector, tiempoEstimado, precio, estado FROM productos WHERE id = :id AND estado != 'Eliminado'");
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
 
         return $consulta->fetchObject('Producto');
     }
 
-    public static function modificarProducto($id, $descripcion, $tipo)
+    public static function modificarProducto($id, $descripcion, $tipo, $sector, $tiempoEstimado, $precio, $estado)
     {
-        $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE productos SET descripcion = :descripcion, tipo = :tipo WHERE id = :id");
+        $retorno = 'Error al modificar Producto';
 
-        $consulta->bindValue(':descripcion', $descripcion, PDO::PARAM_STR);
-        $consulta->bindValue(':tipo', $tipo, PDO::PARAM_STR);
-        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
-        $consulta->execute();
+        try {
+            if (self::obtenerProducto($id))
+            {
+                $objAccesoDato = AccesoDatos::obtenerInstancia();
+                $consulta = $objAccesoDato->prepararConsulta("UPDATE productos SET descripcion = :descripcion, tipo = :tipo, sector = :sector, tiempoEstimado = :tiempoEstimado, precio = :precio, estado = :estado WHERE id = :id");
+        
+                $consulta->bindValue(':descripcion', $descripcion, PDO::PARAM_STR);
+                $consulta->bindValue(':tipo', $tipo, PDO::PARAM_STR);
+                $consulta->bindValue(':sector', $sector, PDO::PARAM_STR);
+                $consulta->bindValue(':tiempoEstimado', $tiempoEstimado, PDO::PARAM_STR);
+                $consulta->bindValue(':precio', $precio);
+                $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+                $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+                $consulta->execute();
+
+                $retorno = 'Producto modificado con exito, ID: ' . $id;
+            } else {
+                $retorno = 'No se encontro al producto';
+            }
+        } catch (PDOException $e) {
+            $retorno = 'Error al ejecutar la consulta: ' . $e->getMessage();
+        }
+
+        return $retorno;
     }
 
     public static function borrarProducto($id)
     {
-        $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE productos SET fechaBaja = :fechaBaja WHERE id = :id");
-        $fecha = new DateTime(date("d-m-Y"));
-        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
-        $consulta->bindValue(':fechaBaja', date_format($fecha, 'Y-m-d H:i:s'));
-        $consulta->execute();
+        $retorno = 'Error al eliminar Producto';
+
+        try {
+            if (self::obtenerProducto($id) !== false)
+            {
+                $objAccesoDato = AccesoDatos::obtenerInstancia();
+                $consulta = $objAccesoDato->prepararConsulta("UPDATE productos SET estado = :estado WHERE id = :id");
+        
+                $estado = 'Eliminado';
+                $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+                $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+                $consulta->execute();
+                $retorno = 'Producto eliminado con exito, ID: ' . $id;
+            } else {
+                $retorno = 'No se encontro al producto';
+            }
+        } catch (PDOException $e) {
+            $retorno = 'Error al ejecutar la consulta: ' . $e->getMessage();
+        }
+
+        return $retorno;
     }
 }

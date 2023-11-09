@@ -10,14 +10,26 @@ class ProductoController extends Producto implements IApiUsable
 
         $descripcion = $parametros['descripcion'];
         $tipo = $parametros['tipo'];
+        $sector = $parametros['sector'];
+        $tiempoEstimado = $parametros['tiempoEstimado'];
+        $precio = $parametros['precio'];
 
         // Creamos el Producto
-        $prd = new Producto();
-        $prd->descripcion = $descripcion;
-        $prd->tipo = $tipo;
-        $prd->crearProducto();
+        $producto = new Producto();
+        $producto->descripcion = $descripcion;
+        $producto->tipo = $tipo;
+        $producto->sector = $sector;
+        $producto->tiempoEstimado = $tiempoEstimado;
+        $producto->precio = $precio;
 
-        $payload = json_encode(array("mensaje" => "Producto creado con exito"));
+        $respuesta = $producto->crearProducto();
+
+        if (is_numeric($respuesta))
+        {
+            $payload = json_encode(array("mensaje" => "Producto creado con exito, ID: " . $respuesta));
+        } else {
+            $payload = json_encode(array("error" => $respuesta));
+        }
 
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
@@ -28,7 +40,7 @@ class ProductoController extends Producto implements IApiUsable
         // Buscamos Producto por id
         $id = $args['id'];
         $producto = Producto::obtenerProducto($id);
-        $payload = json_encode($producto);
+        $payload = $producto !== false?json_encode($producto):json_encode(array("error" => "No se encontro"));
 
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
@@ -42,7 +54,7 @@ class ProductoController extends Producto implements IApiUsable
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }
-    
+
     public function ModificarUno($request, $response, $args)
     {
         $parametros = $request->getParsedBody();
@@ -50,26 +62,27 @@ class ProductoController extends Producto implements IApiUsable
         $id = $args['id'];
         $descripcion = $parametros['descripcion'];
         $tipo = $parametros['tipo'];
+        $sector = $parametros['sector'];
+        $tiempoEstimado = $parametros['tiempoEstimado'];
+        $precio = $parametros['precio'];
+        $estado = $parametros['estado'];
 
-        Producto::modificarProducto($id, $descripcion, $tipo);
+        $respuesta = Producto::modificarProducto($id, $descripcion, $tipo, $sector, $tiempoEstimado, $precio, $estado);
 
-        $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
-        
+        $payload = json_encode(array("mensaje" => $respuesta));
+
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function BorrarUno($request, $response, $args)
     {
-        $parametros = $request->getParsedBody();
+        $id = $args['id'];
+        $respuesta = Producto::borrarProducto($id);
 
-        $productoId = $parametros['productoId'];
-        Producto::borrarProducto($productoId);
-
-        $payload = json_encode(array("mensaje" => "Producto borrado con exito"));
+        $payload = json_encode(array("mensaje" => $respuesta));
 
         $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Content-Type', 'application/json');
     }
 }

@@ -4,27 +4,44 @@ class Mesa
 {
     public $id;
     public $estado;
+    public $codigo;
     public $foto;
 
     public function crearMesa()
     {
-        $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO mesas (estado, foto) VALUES (:estado, :foto)");
-        $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
+        $retorno = 'Error al obtener el ultimo ID insertado';
 
-        $idActual = $objAccesoDatos->obtenerUltimoId();
-        $foto = $this->guardarImagen($idActual);
+        try {
+            $objAccesoDatos = AccesoDatos::obtenerInstancia();
+            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO mesas (estado, codigo, foto) VALUES (:estado, :codigo, :foto)");
+            $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
+            $consulta->bindValue(':codigo', $this->codigo, PDO::PARAM_STR);
+            $consulta->bindValue(':foto', '-', PDO::PARAM_STR);
+            $consulta->execute();
 
-        $consulta->bindValue(':foto', $foto, PDO::PARAM_STR);
-        $consulta->execute();
+            $ultimoId = $objAccesoDatos->obtenerUltimoId();
 
-        return $objAccesoDatos->obtenerUltimoId();
+            if ($ultimoId > 0)
+            {
+                $nombreFoto = $this->guardarImagen($ultimoId);
+                $consulta = $objAccesoDatos->prepararConsulta("UPDATE mesas SET foto = :nombreFoto WHERE id = :id");
+                $consulta->bindValue(':nombreFoto', $nombreFoto, PDO::PARAM_STR);
+                $consulta->bindValue(':id', $ultimoId, PDO::PARAM_INT);
+                $consulta->execute();
+
+                $retorno = $ultimoId;
+            }
+        } catch (PDOException $e) {
+            $retorno = 'Error al ejecutar la consulta: ' . $e->getMessage();
+        }
+
+        return $retorno;
     }
 
     public static function obtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, estado, foto FROM mesas");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, estado, codigo, foto FROM mesas WHERE estado != 'Eliminada'");
         $consulta->execute();
 
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Mesa');
@@ -33,32 +50,62 @@ class Mesa
     public static function obtenerMesa($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, estado, foto FROM mesas WHERE id = :id");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, estado, codigo, foto FROM mesas WHERE id = :id AND estado != 'Eliminada'");
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
 
         return $consulta->fetchObject('Mesa');
     }
 
-    public static function modificarMesa($id, $estado)
+    public static function modificarMesa($id, $estado, $codigo)
     {
-        $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET estado = :estado WHERE id = :id");
+        $retorno = 'Error al modificar Mesa';
 
-        $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
-        //$consulta->bindValue(':foto', $foto, PDO::PARAM_STR);
-        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
-        $consulta->execute();
+        try {
+            if (self::obtenerMesa($id) !== false)
+            {
+                $objAccesoDato = AccesoDatos::obtenerInstancia();
+                $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET estado = :estado, codigo = :codigo WHERE id = :id");
+        
+                $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+                $consulta->bindValue(':codigo', $codigo, PDO::PARAM_STR);
+                //$consulta->bindValue(':foto', $foto, PDO::PARAM_STR);
+                $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+                $consulta->execute();
+                $retorno = 'Mesa modificada con exito, ID: ' . $id;
+            } else {
+                $retorno = 'No se encontro la mesa';
+            }
+        } catch (PDOException $e) {
+            $retorno = 'Error al ejecutar la consulta: ' . $e->getMessage();
+        }
+
+        return $retorno;
     }
 
     public static function borrarMesa($id)
     {
-        $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET fechaBaja = :fechaBaja WHERE id = :id");
-        $fecha = new DateTime(date("d-m-Y"));
-        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
-        $consulta->bindValue(':fechaBaja', date_format($fecha, 'Y-m-d H:i:s'));
-        $consulta->execute();
+        $retorno = 'Error al eliminar Mesa';
+
+        try {
+            if (self::obtenerMesa($id) !== false)
+            {
+                $objAccesoDato = AccesoDatos::obtenerInstancia();
+                $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET estado = :estado WHERE id = :id");
+
+                $estado = 'Eliminada';
+                $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+                $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+                $consulta->execute();
+                $retorno = 'Mesa eliminada con exito, ID: ' . $id;
+            } else {
+                $retorno = 'No se encontro la mesa';
+            }
+        } catch (PDOException $e) {
+            $retorno = 'Error al ejecutar la consulta: ' . $e->getMessage();
+        }
+
+        return $retorno;
     }
 
     private function guardarImagen($id) {
@@ -67,7 +114,6 @@ class Mesa
         if (isset($_FILES['foto']))
         {
             $nombreImagen = 'mesas_' . $id . '.jpg';
-            // $this->foto = $nombreImagen;
 
             $destino = "img/ImagenesDeMesas/" . $nombreImagen;
             move_uploaded_file($_FILES['foto']['tmp_name'], $destino);

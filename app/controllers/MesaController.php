@@ -9,15 +9,23 @@ class MesaController extends Mesa implements IApiUsable
         $parametros = $request->getParsedBody();
 
         $estado = $parametros['estado'];
+        $codigo = $parametros['codigo'];
         $foto = $_FILES['foto'];
 
         // Creamos la Mesa
         $mesa = new Mesa();
         $mesa->estado = $estado;
+        $mesa->codigo = $codigo;
         $mesa->foto = $foto;
-        $mesa->crearMesa();
 
-        $payload = json_encode(array("mensaje" => "Mesa creada con exito"));
+        $respuesta = $mesa->crearMesa();
+
+        if (is_numeric($respuesta))
+        {
+            $payload = json_encode(array("mensaje" => "Mesa creada con exito, ID: " . $respuesta));
+        } else {
+            $payload = json_encode(array("error" => $respuesta));
+        }
 
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
@@ -28,7 +36,7 @@ class MesaController extends Mesa implements IApiUsable
         // Buscamos Mesa por id
         $id = $args['id'];
         $mesa = Mesa::obtenerMesa($id);
-        $payload = json_encode($mesa);
+        $payload = $mesa !== false?json_encode($mesa):json_encode(array("error" => "No se encontro"));
 
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
@@ -49,27 +57,23 @@ class MesaController extends Mesa implements IApiUsable
 
         $id = $args['id'];
         $estado = $parametros['estado'];
+        $codigo = $parametros['codigo'];
         //$foto = $_FILES['foto'];
+        $respuesta = Mesa::modificarMesa($id, $estado, $codigo);
+        $payload = json_encode(array("mensaje" => $respuesta));
 
-        Mesa::modificarMesa($id, $estado);
-
-        $payload = json_encode(array("mensaje" => "Mesa modificada con exito"));
-        
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function BorrarUno($request, $response, $args)
     {
-        $parametros = $request->getParsedBody();
+        $id = $args['id'];
+        $respuesta = Mesa::borrarMesa($id);
 
-        $mesaId = $parametros['MesaId'];
-        Mesa::borrarMesa($mesaId);
-
-        $payload = json_encode(array("mensaje" => "Mesa borrada con exito"));
+        $payload = json_encode(array("mensaje" => $respuesta));
 
         $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Content-Type', 'application/json');
     }
 }
