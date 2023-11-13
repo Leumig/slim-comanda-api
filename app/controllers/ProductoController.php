@@ -79,7 +79,6 @@ class ProductoController extends Producto implements IApiUsable
     {
         $id = $args['id'];
         $respuesta = Producto::borrarProducto($id);
-
         $payload = json_encode(array("mensaje" => $respuesta));
 
         $response->getBody()->write($payload);

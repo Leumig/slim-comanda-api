@@ -9,9 +9,9 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Factory\AppFactory;
 use Slim\Routing\RouteCollectorProxy;
 use Slim\Routing\RouteContext;
+date_default_timezone_set('America/Argentina/Buenos_Aires');
 
 require __DIR__ . '/../vendor/autoload.php';
-
 require_once './db/AccesoDatos.php';
 //require_once './middlewares/Logger.php';
 

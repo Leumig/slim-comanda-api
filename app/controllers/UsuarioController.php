@@ -81,7 +81,6 @@ class UsuarioController extends Usuario implements IApiUsable
     {
         $id = $args['id'];
         $respuesta = Usuario::borrarUsuario($id);
-
         $payload = json_encode(array("mensaje" => $respuesta));
 
         $response->getBody()->write($payload);

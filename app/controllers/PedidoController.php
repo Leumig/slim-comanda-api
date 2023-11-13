@@ -10,21 +10,49 @@ class PedidoController extends Pedido implements IApiUsable
 
         $id_mesa = $parametros['id_mesa'];
         $id_usuario = $parametros['id_usuario'];
-        $estado = $parametros['estado'];
+        $codigo = $parametros['codigo'];
         $nombre_cliente = $parametros['nombre_cliente'];
+        $estado = $parametros['estado'];
+        $productos = $parametros['producto'];
 
-        // Creamos la Pedido
+        // Creamos el Pedido
         $pedido = new Pedido();
         $pedido->id_mesa = $id_mesa;
         $pedido->id_usuario = $id_usuario;
-        $pedido->estado = $estado;
+        $pedido->codigo = $codigo;
         $pedido->nombre_cliente = $nombre_cliente;
-        $pedido->crearPedido();
+        $pedido->estado = $estado;
+        
+        $respuesta = $pedido->crearPedido($productos);
 
         $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
 
+        if (is_numeric($respuesta))
+        {
+            $payload = json_encode(array("mensaje" => "Pedido creado con exito, ID: " . $respuesta));
+
+            foreach ($productos as $producto) {
+                $idProducto = $producto['id_producto'];
+                $cantidad = $producto['cantidad'];
+                $this->AsociarProductoPedido($respuesta, $idProducto, $cantidad);
+            }
+        } else {
+            $payload = json_encode(array("error" => $respuesta));
+        }
+
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    private function AsociarProductoPedido($idPedido, $idProducto, $cantidad)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos_productos (id_pedido, id_producto, cantidad) VALUES (:id_pedido, :id_producto, :cantidad)");
+
+        $consulta->bindValue(':id_pedido', $idPedido, PDO::PARAM_INT);
+        $consulta->bindValue(':id_producto', $idProducto, PDO::PARAM_INT);
+        $consulta->bindValue(':cantidad', $cantidad, PDO::PARAM_INT);
+        $consulta->execute();
     }
 
     public function TraerUno($request, $response, $args)
@@ -32,7 +60,7 @@ class PedidoController extends Pedido implements IApiUsable
         // Buscamos Pedido por id
         $id = $args['id'];
         $pedido = Pedido::obtenerPedido($id);
-        $payload = json_encode($pedido);
+        $payload = $pedido !== false?json_encode($pedido):json_encode(array("error" => "No se encontro"));
 
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
@@ -54,28 +82,24 @@ class PedidoController extends Pedido implements IApiUsable
         $id = $args['id'];
         $id_mesa = $parametros['id_mesa'];
         $id_usuario = $parametros['id_usuario'];
-        $estado = $parametros['estado'];
+        $codigo = $parametros['codigo'];
         $nombre_cliente = $parametros['nombre_cliente'];
-
-        Pedido::modificarPedido($id, $id_mesa, $id_usuario, $estado, $nombre_cliente);
-
-        $payload = json_encode(array("mensaje" => "Pedido modificado con exito"));
+        $estado = $parametros['estado'];
+        $respuesta = Pedido::modificarPedido($id, $id_mesa, $id_usuario, $codigo, $nombre_cliente, $estado);
         
+        $payload = json_encode(array("mensaje" => $respuesta));
+
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function BorrarUno($request, $response, $args)
     {
-        //$parametros = $request->getParsedBody();
-
         $id = $args['id'];
-        Pedido::borrarPedido($id);
-
-        $payload = json_encode(array("mensaje" => "Pedido borrado con exito"));
+        $respuesta = Pedido::borrarPedido($id);
+        $payload = json_encode(array("mensaje" => $respuesta));
 
         $response->getBody()->write($payload);
-        return $response
-          ->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Content-Type', 'application/json');
     }
 }
