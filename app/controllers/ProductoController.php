@@ -10,7 +10,7 @@ class ProductoController extends Producto implements IApiUsable
 
         $descripcion = $parametros['descripcion'];
         $tipo = $parametros['tipo'];
-        $sector = $parametros['sector'];
+        $seccion = $parametros['seccion'];
         $tiempoEstimado = $parametros['tiempoEstimado'];
         $precio = $parametros['precio'];
 
@@ -18,7 +18,7 @@ class ProductoController extends Producto implements IApiUsable
         $producto = new Producto();
         $producto->descripcion = $descripcion;
         $producto->tipo = $tipo;
-        $producto->sector = $sector;
+        $producto->seccion = $seccion;
         $producto->tiempoEstimado = $tiempoEstimado;
         $producto->precio = $precio;
 
@@ -62,12 +62,12 @@ class ProductoController extends Producto implements IApiUsable
         $id = $args['id'];
         $descripcion = $parametros['descripcion'];
         $tipo = $parametros['tipo'];
-        $sector = $parametros['sector'];
+        $seccion = $parametros['seccion'];
         $tiempoEstimado = $parametros['tiempoEstimado'];
         $precio = $parametros['precio'];
         $estado = $parametros['estado'];
 
-        $respuesta = Producto::modificarProducto($id, $descripcion, $tipo, $sector, $tiempoEstimado, $precio, $estado);
+        $respuesta = Producto::modificarProducto($id, $descripcion, $tipo, $seccion, $tiempoEstimado, $precio, $estado);
 
         $payload = json_encode(array("mensaje" => $respuesta));
 

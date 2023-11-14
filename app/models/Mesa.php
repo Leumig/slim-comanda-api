@@ -41,7 +41,7 @@ class Mesa
     public static function obtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, estado, codigo, foto FROM mesas WHERE estado != 'Eliminada'");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, estado, codigo, foto FROM mesas WHERE estado != 'Eliminado'");
         $consulta->execute();
 
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Mesa');
@@ -50,7 +50,7 @@ class Mesa
     public static function obtenerMesa($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, estado, codigo, foto FROM mesas WHERE id = :id AND estado != 'Eliminada'");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, estado, codigo, foto FROM mesas WHERE id = :id AND estado != 'Eliminado'");
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
 
@@ -93,7 +93,7 @@ class Mesa
                 $objAccesoDato = AccesoDatos::obtenerInstancia();
                 $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET estado = :estado WHERE id = :id");
 
-                $estado = 'Eliminada';
+                $estado = 'Eliminado';
                 $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
                 $consulta->bindValue(':id', $id, PDO::PARAM_INT);
                 $consulta->execute();
