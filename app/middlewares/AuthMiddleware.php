@@ -7,10 +7,19 @@ use Slim\Psr7\Response;
 class AuthMiddleware
 {
     private $sectorRequerido;
+    private $sectorOpcional1;
+    private $sectorOpcional2;
+    private $sectorOpcional3;
+    private $sectorOpcional4;
 
-    public function __construct($sectorRequerido)
+    public function __construct($sectorRequerido, $sectorOpcional1 = null,
+        $sectorOpcional2 = null, $sectorOpcional3 = null, $sectorOpcional4 = null)
     {
         $this->sectorRequerido = $sectorRequerido;
+        $this->sectorOpcional1 = $sectorOpcional1;
+        $this->sectorOpcional2 = $sectorOpcional2;
+        $this->sectorOpcional3 = $sectorOpcional3;
+        $this->sectorOpcional4 = $sectorOpcional4;
     }
 
     public function __invoke(Request $request, RequestHandler $handler): Response
@@ -31,11 +40,11 @@ class AuthMiddleware
         
         $sector = $parametros['sector'];
 
-        if ($sector === $this->sectorRequerido) {
+        if ($sector === $this->sectorRequerido || $sector === $this->sectorOpcional1 || $sector === $this->sectorOpcional2 || $sector === $this->sectorOpcional3 || $sector === $this->sectorOpcional4) {
             $response = $handler->handle($request);
         } else {
             $response = new Response();
-            $payload = json_encode(array('mensaje' => 'Necesitas ser ' . $this->sectorRequerido . ' para realizar esta solicitud'));
+            $payload = json_encode(array('mensaje' => 'No tenes permiso para realizar esta accion'));
             $response->getBody()->write($payload);
         }
 

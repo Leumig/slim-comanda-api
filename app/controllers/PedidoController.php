@@ -102,4 +102,127 @@ class PedidoController extends Pedido implements IApiUsable
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }
+
+    //// ACCIONES DE PEDIDOS ///////////////////////////////////////////////////////////////////////////
+    public function VerPendientes($request, $response, $args)
+    {
+        $parametros = $request->getQueryParams();
+        $sector = $parametros['sector'];
+
+        $lista = Pedido::obtenerTodos();
+
+        if ($sector !== 'Socio') { // Si la consulta es de un usuario distinto a socio...
+            $listaFiltrada = []; // Creo una nueva lista filtrada
+
+            foreach ($lista as $pedido) { // Recorro la lista de todos los pedidos
+                if ($pedido->estado === 'Pendiente') { // Si el pedido esta en estado pendiente...
+                    $idPedido = $pedido->id; // Tomo la id del pedido pendiente
+                    $productos = Producto::obtenerProductosPorPedido($idPedido); // Tomo sus productos
+
+                    foreach ($productos as $producto) { // Recorro los productos del pedido pendiente
+                        if ($producto->seccion === $sector){ // Si el producto corresponde al sector...
+                            // Significa que este pedido puede ser iniciado por el usuario
+                            // Por lo tanto lo agrego a la lista de pendientes
+                            //array_push($listaFiltrada, $idPedido); // Lo agrego a la lista filtrada
+                            //break;
+
+                            //Esto sería para mostrar CADA PRODUCTO que le corresponde al empleado
+                            array_push($listaFiltrada, $producto); // Lo agrego a la lista filtrada
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($sector === 'Socio') {
+            $payload = json_encode(array("pedidosPendientes" => $lista));
+        } else {
+            $payload = json_encode(array("pedidosPendientes" => $listaFiltrada));
+        }
+
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function IniciarPreparacion($request, $response, $args)
+    {
+        $parametros = $request->getParsedBody();
+        $sector = $parametros['sector'];
+
+        $lista = Pedido::obtenerTodos();
+        $payload = 'No se puso ningun pedido en preparacion';
+
+        if ($sector !== 'Socio') { // Si la consulta es de un usuario distinto a socio...
+            foreach ($lista as $pedido) { // Recorro la lista de todos los pedidos
+                if ($pedido->estado === 'Pendiente') { // Si el pedido esta en estado pendiente...
+                    $estadoPedido = 'En preparacion';
+                    $idPedido = $pedido->id;
+                    $productos = Producto::obtenerProductosPorPedido($idPedido); // Tomo sus productos
+
+                    foreach ($productos as $producto) { // Recorro los productos del pedido pendiente
+                        if ($producto->seccion === $sector){ // Si el producto corresponde al sector...
+                            // Significa que este pedido puede ser iniciado por el usuario
+                            // Por lo tanto modifico el estado de su pedido
+
+                            // Le cambio el estado a 'En preparacion'
+                            $objAccesoDato = AccesoDatos::obtenerInstancia();
+                            $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET estado = :estado WHERE id = :id");
+
+                            $consulta->bindValue(':estado', $estadoPedido, PDO::PARAM_STR);
+                            $consulta->bindValue(':id', $idPedido, PDO::PARAM_INT);
+                            $consulta->execute();
+
+                            $payload = 'Se pusieron en preparacion los pedidos';
+                        }
+                    }
+                    
+                }
+            }
+        }
+        
+        $payload = json_encode(array("mensaje" => $payload));
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function FinalizarPedido($request, $response, $args)
+    {
+        $parametros = $request->getParsedBody();
+        $sector = $parametros['sector'];
+
+        $lista = Pedido::obtenerTodos();
+        $payload = 'No se puso ningun pedido listo para servir';
+
+        if ($sector !== 'Socio') { // Si la consulta es de un usuario distinto a socio...
+            foreach ($lista as $pedido) { // Recorro la lista de todos los pedidos
+                if ($pedido->estado === 'En preparacion') { // Si el pedido esta en estado pendiente...
+                    $estadoPedido = 'Listo para servir';
+                    $idPedido = $pedido->id;
+                    $productos = Producto::obtenerProductosPorPedido($idPedido); // Tomo sus productos
+
+                    foreach ($productos as $producto) { // Recorro los productos del pedido en prep.
+                        if ($producto->seccion === $sector){ // Si el producto corresponde al sector...
+                            // Significa que este pedido puede ser iniciado por el usuario
+                            // Por lo tanto modifico el estado de su pedido
+
+                            // Le cambio el estado a 'Listo para servir'
+                            $objAccesoDato = AccesoDatos::obtenerInstancia();
+                            $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET estado = :estado WHERE id = :id");
+
+                            $consulta->bindValue(':estado', $estadoPedido, PDO::PARAM_STR);
+                            $consulta->bindValue(':id', $idPedido, PDO::PARAM_INT);
+                            $consulta->execute();
+
+                            $payload = 'Se pusieron los pedidos listos para servir';
+                        }
+                    }
+                    
+                }
+            }
+        }
+        
+        $payload = json_encode(array("mensaje" => $payload));
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
 }

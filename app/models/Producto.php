@@ -108,4 +108,33 @@ class Producto
 
         return $retorno;
     }
+
+    public static function obtenerProductosPorPedido($idPedido)
+    {
+        $listaIDs = [];
+
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id_producto FROM pedidos_productos WHERE id_pedido = :id_pedido");
+
+        $consulta->bindValue(':id_pedido', $idPedido, PDO::PARAM_INT);
+        $consulta->execute();
+
+        $listaIDs = $consulta->fetchAll(PDO::FETCH_COLUMN); // FETCH_COLUMN para obtener una sola columna
+        
+        $listaProductos = self::obtenerProductosPorIDs($listaIDs);
+
+        // Ahora $listaProductos contiene los objetos Producto asociados al pedido
+        return $listaProductos;
+    }
+    private static function obtenerProductosPorIDs($listaIDs)
+    {
+        $listaProductos = [];
+
+        foreach ($listaIDs as $idProducto) {
+            $producto = Producto::obtenerProducto($idProducto);
+            array_push($listaProductos, $producto);
+        }
+
+        return $listaProductos;
+    }
 }

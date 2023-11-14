@@ -77,7 +77,6 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
     $group->put('/{id}', \MesaController::class . ':ModificarUno')
     ->add(new ParamsMiddleware(['estado', 'codigo']));
 
-
     $group->delete('/{id}', \MesaController::class . ':BorrarUno');
 })
 ->add(new AuthMiddleware('Socio')); // Valido que sea del sector que yo quiero
@@ -94,7 +93,19 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) {
 
     $group->delete('/{id}', \PedidoController::class . ':BorrarUno');
 })
-->add(new AuthMiddleware('Socio')); // Valido que sea del sector que yo quiero
+->add(new AuthMiddleware('Socio', 'Mozo')); // Valido que sea del sector que yo quiero
+
+// Acciones de Pedidos
+$app->group('/accionesPedidos', function (RouteCollectorProxy $group) {
+    $group->get('[/]', \PedidoController::class . ':VerPendientes') // Muestra los productos pendientes 
+    ->add(new AuthMiddleware('Socio', 'Mozo', 'Cocina', 'Barra', 'Cerveceria')); 
+
+    $group->post('[/]', \PedidoController::class . ':IniciarPreparacion') // Inicio la preparacion de un Pedido
+    ->add(new AuthMiddleware('Cocina', 'Barra', 'Cerveceria'));
+
+    $group->post('/finalizar', \PedidoController::class . ':FinalizarPedido') // Pedido listo para servir
+    ->add(new AuthMiddleware('Cocina', 'Barra', 'Cerveceria'));
+});
 
 $app->get('[/]', function (Response $response) {
     $payload = json_encode(array("mensaje" => "Hola Mundo. Slim Framework 4 PHP"));
