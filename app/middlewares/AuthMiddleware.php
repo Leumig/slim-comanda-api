@@ -15,18 +15,26 @@ class AuthMiddleware
 
     public function __invoke(Request $request, RequestHandler $handler): Response
     {   
-        // Si es 'GET' recibo en URL, y sino, en el Body
-        if ($_SERVER["REQUEST_METHOD"] === 'GET' || $_SERVER["REQUEST_METHOD"] === 'DELETE') {
-            $parametros = $request->getQueryParams();
-        } elseif ($_SERVER["REQUEST_METHOD"] === 'PUT') {
-            parse_str($request->getBody()->getContents(), $parametros); // Si es PUT, hay que parsear
-        } else {
-            if ($request->getHeaderLine('Content-Type') === 'application/json') {
-                $data = $request->getBody()->getContents(); // Si es JSON (raw), hay que hacer el decode
-                $parametros = json_decode($data, true);
-            } else {
-                $parametros = $request->getParsedBody();
-            }
+        // Valido el verbo HTTP y tomo los parametros como corresponda
+        switch ($_SERVER["REQUEST_METHOD"]) {
+            case 'GET':
+            case 'DELETE':
+                $parametros = $request->getQueryParams();
+                break;
+            case 'PUT':
+                parse_str($request->getBody()->getContents(), $parametros); // Si es PUT, hay que parsear
+            case 'POST':
+                if ($request->getHeaderLine('Content-Type') === 'application/json') {
+                    $data = $request->getBody()->getContents(); // Si es JSON (raw), hay que hacer el decode
+                    $parametros = json_decode($data, true);
+                } else {
+                    $parametros = $request->getParsedBody();
+                }
+            default:
+                $response = new Response();
+                $response->getBody()->write(json_encode(['mensaje' => 'Verbo HTTP no valido']));
+                return $response->withHeader('Content-Type', 'application/json');
+            break;
         }
         
         $sector = $parametros['sector'];
