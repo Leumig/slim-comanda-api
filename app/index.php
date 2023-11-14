@@ -50,7 +50,8 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
     ->add(new ParamsMiddleware(['usuario', 'clave', 'rol', 'email', 'nombre', 'apellido', 'estado']));
 
     $group->delete('/{id}', \UsuarioController::class . ':BorrarUno');
-})->add(new AuthMiddleware('Socio')); // Valido que sea del sector que yo quiero
+})
+->add(new AuthMiddleware('Socio')); // Valido que sea del sector que yo quiero
 
 // Productos
 $app->group('/productos', function (RouteCollectorProxy $group) {
