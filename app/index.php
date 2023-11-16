@@ -98,13 +98,11 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) {
 // Acciones de Pedidos
 $app->group('/accionesPedidos', function (RouteCollectorProxy $group) {
     $group->get('[/]', \PedidoController::class . ':VerPendientes') // Muestra los productos pendientes 
-    ->add(new AuthMiddleware('Socio', 'Mozo', 'Cocina', 'Barra', 'Cerveceria')); 
+    ->add(new AuthMiddleware('Socio', 'Mozo', 'Cocina', 'Barra', 'Cerveceria'));
 
-    $group->post('[/]', \PedidoController::class . ':IniciarPreparacion') // Inicio la preparacion de un Pedido
-    ->add(new AuthMiddleware('Cocina', 'Barra', 'Cerveceria'));
-
-    $group->post('/finalizar', \PedidoController::class . ':FinalizarPedido') // Pedido listo para servir
-    ->add(new AuthMiddleware('Cocina', 'Barra', 'Cerveceria'));
+    $group->post('/{proceso}', \PedidoController::class . ':ProcesarPreparacion')
+    ->add(new AuthMiddleware('Cocina', 'Barra', 'Cerveceria'))
+    ->add(new ParamsMiddleware(['idProducto', 'tiempoPreparacion', 'idPedido']));
 });
 
 $app->get('[/]', function (Response $response) {

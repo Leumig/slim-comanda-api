@@ -19,20 +19,19 @@ class Pedido
 
         try {
             $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (id_mesa, id_usuario, codigo, nombre_cliente, estado, monto, tiempo_estimado, hora_inicio) VALUES (:id_mesa, :id_usuario, :codigo, :nombre_cliente, :estado, :monto, :tiempo_estimado, :hora_inicio)");
+            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (id_mesa, id_usuario, codigo, nombre_cliente, estado, monto, hora_inicio) VALUES (:id_mesa, :id_usuario, :codigo, :nombre_cliente, :estado, :monto, :hora_inicio)");
     
             $monto = $this->calcularMonto($productos);
-            $tiempoEstimado = $this->calcularTiempoEstimado($productos);
+            //$tiempoEstimado = $this->calcularTiempoEstimado($productos);
 
             $horaInicio = date("H:i");
-
             $consulta->bindValue(':id_mesa', $this->id_mesa, PDO::PARAM_INT);
             $consulta->bindValue(':id_usuario', $this->id_usuario, PDO::PARAM_INT);
             $consulta->bindValue(':codigo', $this->codigo, PDO::PARAM_STR);
             $consulta->bindValue(':nombre_cliente', $this->nombre_cliente, PDO::PARAM_STR);
             $consulta->bindValue(':estado', $this->estado, PDO::PARAM_STR);
             $consulta->bindValue(':monto', $monto);
-            $consulta->bindValue(':tiempo_estimado', $tiempoEstimado);
+            //$consulta->bindValue(':tiempo_estimado', $tiempoEstimado);
             $consulta->bindValue(':hora_inicio', $horaInicio);
             $consulta->execute();
     
@@ -137,6 +136,7 @@ class Pedido
         return $producto->precio;
     }
 
+    /*
     private function calcularTiempoEstimado($productos)
     {
         $tiempoEstimado = '00:00:00';
@@ -161,5 +161,25 @@ class Pedido
     private function compararTiempos($tiempo1, $tiempo2)
     {
         return strcmp($tiempo1, $tiempo2);
+    }
+    */
+
+    public static function Preparar($pedido, $nuevoEstadoPedido, $tiempoPreparacion = null)
+    {
+        // Cambiamos el estado del pedido
+        $objAccesoDato = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET estado = :estado, hora_fin = :hora_fin WHERE id = :id");
+
+        if ($nuevoEstadoPedido === 'Listo para servir') {
+            $horaFin = new DateTime('now');
+            $horaFormateada = $horaFin->format('Y-m-d H:i:s');
+        } else {
+            $horaFormateada = NULL;
+        }
+
+        $consulta->bindValue(':estado', $nuevoEstadoPedido, PDO::PARAM_STR);
+        $consulta->bindValue(':hora_fin', $horaFormateada, PDO::PARAM_STR);
+        $consulta->bindValue(':id', $pedido->id, PDO::PARAM_INT);
+        $consulta->execute();
     }
 }
