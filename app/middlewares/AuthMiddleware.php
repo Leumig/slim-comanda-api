@@ -24,27 +24,33 @@ class AuthMiddleware
 
     public function __invoke(Request $request, RequestHandler $handler): Response
     {   
-        // Si es 'GET' recibo en URL, y sino, en el Body
-        if ($_SERVER["REQUEST_METHOD"] === 'GET' || $_SERVER["REQUEST_METHOD"] === 'DELETE') {
-            $parametros = $request->getQueryParams();
-        } elseif ($_SERVER["REQUEST_METHOD"] === 'PUT') {
-            parse_str($request->getBody()->getContents(), $parametros); // Si es PUT, hay que parsear
-        } else {
-            if ($request->getHeaderLine('Content-Type') === 'application/json') {
-                $data = $request->getBody()->getContents(); // Si es JSON (raw), hay que hacer el decode
-                $parametros = json_decode($data, true);
-            } else {
-                $parametros = $request->getParsedBody();
-            }
-        }
-        
-        $sector = $parametros['sector'];
-
-        if ($sector === $this->sectorRequerido || $sector === $this->sectorOpcional1 || $sector === $this->sectorOpcional2 || $sector === $this->sectorOpcional3 || $sector === $this->sectorOpcional4) {
-            $response = $handler->handle($request);
-        } else {
+        try {
+            // Intento guardar en '$header' lo que reciba del header Authorization
+            $header = $request->getHeaderLine('Authorization');
             $response = new Response();
-            $payload = json_encode(array('mensaje' => 'No tenes permiso para realizar esta accion'));
+
+            if (strlen($header) > 0) { // Valido que a '$header' le haya llegado algo
+                $token = trim(explode("Bearer", $header)[1]);
+    
+                $data = AutentificadorJWT::ObtenerData($token);
+
+                $sector = $data->sector;
+        
+                if ($sector === $this->sectorRequerido || $sector === $this->sectorOpcional1 || $sector === $this->sectorOpcional2 || $sector === $this->sectorOpcional3 || $sector === $this->sectorOpcional4)
+                {
+                    AutentificadorJWT::VerificarToken($token);
+                    $response = $handler->handle($request);
+                } else {
+                    $payload = json_encode(array('mensaje' => 'No tenes permiso para realizar esta accion'));
+                    $response->getBody()->write($payload);
+                }
+            } else {
+                $payload = json_encode(array('mensaje' => 'No se recibio el header Authorization'));
+                $response->getBody()->write($payload);
+            }
+        } catch (Exception $e) {
+            $response = new Response();
+            $payload = json_encode(array('mensaje' => 'Ocurrio un error con el TOKEN'));
             $response->getBody()->write($payload);
         }
 

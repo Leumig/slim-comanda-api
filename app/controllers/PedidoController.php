@@ -106,8 +106,15 @@ class PedidoController extends Pedido implements IApiUsable
     //// ACCIONES DE PEDIDOS ///////////////////////////////////////////////////////////////////////////
     public function VerPendientes($request, $response, $args)
     {
-        $parametros = $request->getQueryParams();
-        $sector = $parametros['sector'];
+        // Tomo 'sector' del 'data' del payload del token reibido
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);
+        $data = AutentificadorJWT::ObtenerData($token);
+        $sector = $data->sector;
+
+        // Ahora ya no tomo 'sector' por parametros
+        // $parametros = $request->getQueryParams();
+        // $sector = $parametros['sector'];
 
         $lista = Pedido::obtenerTodos();
 
@@ -148,9 +155,18 @@ class PedidoController extends Pedido implements IApiUsable
     {
         $mensaje = 'No se pudo poner nada en preparacion';
 
+        // Tomo 'sector' del 'data' del payload del token reibido
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);
+        $data = AutentificadorJWT::ObtenerData($token);
+        $sector = $data->sector;
+
+        // Ahora ya no tomo 'sector' por parametros
+        // $parametros = $request->getQueryParams();
+        // $sector = $parametros['sector'];
+
         $parametros = $request->getParsedBody();
         $proceso = $args['proceso'];
-        $sector = $parametros['sector'];
         $idPedido = $parametros['idPedido'];
         $idProducto = $parametros['idProducto'];
         $tiempoPreparacion = $parametros['tiempoPreparacion'];

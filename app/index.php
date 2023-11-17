@@ -17,7 +17,8 @@ require_once './controllers/UsuarioController.php';
 require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
-require_once './middlewares/LoggerMiddleware.php';
+require_once './controllers/JWTController.php';
+// require_once './middlewares/LoggerMiddleware.php'; // Ahora ya no lo necesitamos
 require_once './middlewares/AuthMiddleware.php';
 require_once './middlewares/ParamsMiddleware.php';
 
@@ -30,10 +31,13 @@ $app = AppFactory::create();
 $app->addErrorMiddleware(true, true, true);
 $app->addBodyParsingMiddleware();
 
+// Este era el funcionamiento del Login hasta el Sprint 2, sin usar JWT
+/*
 //La aplicación siempre va a necesitar estos parámetros mínimos, y logearse correctamente
 $app
 ->add(new LoggerMiddleware) // Valido que exista el usuario en la base de datos
 ->add(new ParamsMiddleware(['sector', 'usuarioActual', 'claveActual'], true)); // Valido parametros esenciales
+*/
 
 // Levantar Servidor en puerto 666
 // php -S localhost:666 -t app
@@ -58,10 +62,10 @@ $app->group('/productos', function (RouteCollectorProxy $group) {
     $group->get('[/]', \ProductoController::class . ':TraerTodos');
     $group->get('/{id}', \ProductoController::class . ':TraerUno');
     $group->post('[/]', \ProductoController::class . ':CargarUno')
-    ->add(new ParamsMiddleware(['descripcion', 'tipo', 'seccion', 'tiempoEstimado', 'precio']));
+    ->add(new ParamsMiddleware(['descripcion', 'tipo', 'seccion', 'precio']));
 
     $group->put('/{id}', \ProductoController::class . ':ModificarUno')
-    ->add(new ParamsMiddleware(['descripcion', 'tipo', 'seccion', 'tiempoEstimado', 'precio', 'estado']));
+    ->add(new ParamsMiddleware(['descripcion', 'tipo', 'seccion', 'precio', 'estado']));
     
     $group->delete('/{id}', \ProductoController::class . ':BorrarUno');
 })
@@ -105,7 +109,13 @@ $app->group('/accionesPedidos', function (RouteCollectorProxy $group) {
     ->add(new ParamsMiddleware(['idProducto', 'tiempoPreparacion', 'idPedido']));
 });
 
-$app->get('[/]', function (Response $response) {
+// Autenticacion
+$app->group('/auth', function (RouteCollectorProxy $group) {
+    $group->post('/login', \JWTController::class . ':SolicitarToken');
+})
+->add(new ParamsMiddleware(['usuario', 'clave', 'sector']));
+
+$app->get('[/]', function (Request $request, Response $response) {
     $payload = json_encode(array("mensaje" => "Hola Mundo. Slim Framework 4 PHP"));
     
     $response->getBody()->write($payload);
