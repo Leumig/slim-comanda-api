@@ -18,6 +18,7 @@ require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
 require_once './controllers/JWTController.php';
+require_once './controllers/CSVController.php';
 // require_once './middlewares/LoggerMiddleware.php'; // Ahora ya no lo necesitamos
 require_once './middlewares/AuthMiddleware.php';
 require_once './middlewares/ParamsMiddleware.php';
@@ -114,6 +115,14 @@ $app->group('/auth', function (RouteCollectorProxy $group) {
     $group->post('/login', \JWTController::class . ':SolicitarToken');
 })
 ->add(new ParamsMiddleware(['usuario', 'clave', 'sector']));
+
+// Importar/Exportar CSV
+$app->group('/csv', function (RouteCollectorProxy $group) {
+    $group->post('/guardarUsuarios', \CSVController::class . ':GuardarDatos');
+    $group->post('/cargarUsuarios', \CSVController::class . ':CargarDatos');
+})
+->add(new AuthMiddleware('Socio'));
+
 
 $app->get('[/]', function (Request $request, Response $response) {
     $payload = json_encode(array("mensaje" => "Hola Mundo. Slim Framework 4 PHP"));

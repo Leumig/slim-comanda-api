@@ -113,4 +113,36 @@ class Usuario
 
         return $retorno;
     }
+
+    public static function crearPorCampos($datos)
+    {
+        $respuesta = null;
+
+        //$id = isset($datos[0]) ? $datos[0] : null;
+        $usuario = isset($datos[1]) ? $datos[1] : null;
+        $clave = isset($datos[2]) ? $datos[2] : null;
+        $rol = isset($datos[3]) ? $datos[3] : null;
+        $email = isset($datos[4]) ? $datos[4] : null;
+        $nombre = isset($datos[5]) ? $datos[5] : null;
+        $apellido = isset($datos[6]) ? $datos[6] : null;
+        $estado = isset($datos[7]) ? $datos[7] : null;
+
+        $usuarioNuevo = new Usuario();
+        //$usuarioNuevo->id = $id;
+        $usuarioNuevo->usuario = $usuario;
+        $usuarioNuevo->clave = $clave;
+        $usuarioNuevo->rol = $rol;
+        $usuarioNuevo->email = $email;
+        $usuarioNuevo->nombre = $nombre;
+        $usuarioNuevo->apellido = $apellido;
+        $usuarioNuevo->estado = $estado;
+
+        $respuesta = $usuarioNuevo->crearUsuario();
+
+        if (is_numeric($respuesta)) {
+            $respuesta = $usuarioNuevo;
+        }
+        
+        return $respuesta;
+    }
 }
