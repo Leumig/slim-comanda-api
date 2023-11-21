@@ -19,6 +19,8 @@ require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
 require_once './controllers/JWTController.php';
 require_once './controllers/CSVController.php';
+require_once './controllers/MozoController.php';
+require_once './controllers/ClienteController.php';
 // require_once './middlewares/LoggerMiddleware.php'; // Ahora ya no lo necesitamos
 require_once './middlewares/AuthMiddleware.php';
 require_once './middlewares/ParamsMiddleware.php';
@@ -108,6 +110,20 @@ $app->group('/accionesPedidos', function (RouteCollectorProxy $group) {
     $group->post('/{proceso}', \PedidoController::class . ':ProcesarPreparacion')
     ->add(new AuthMiddleware('Cocina', 'Barra', 'Cerveceria'))
     ->add(new ParamsMiddleware(['idProducto', 'tiempoPreparacion', 'idPedido']));
+});
+
+// Acciones de Mozos
+$app->group('/accionesMozos', function (RouteCollectorProxy $group) {
+    $group->post('/asociarFoto', \MozoController::class . ':AsociarFoto')
+    ->add(new AuthMiddleware('Mozo'))
+    ->add(new ParamsMiddleware(['idMesa', 'idPedido']));
+});
+
+// Acciones de Clientes
+$app->group('/accionesClientes', function (RouteCollectorProxy $group) {
+    $group->post('/consultarPedido', \ClienteController::class . ':ConsultarPedido')
+    ->add(new AuthMiddleware('Cliente'))
+    ->add(new ParamsMiddleware(['codigoPedido']));
 });
 
 // Autenticacion

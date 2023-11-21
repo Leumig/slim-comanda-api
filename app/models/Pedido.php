@@ -157,18 +157,19 @@ class Pedido
         $producto = Producto::obtenerProducto($id);
         return $producto->tiempoEstimado;
     }
-
-    private function compararTiempos($tiempo1, $tiempo2)
+    */
+    
+    private static function compararTiempos($tiempo1, $tiempo2)
     {
         return strcmp($tiempo1, $tiempo2);
     }
-    */
+    
 
     public static function Preparar($pedido, $nuevoEstadoPedido, $tiempoPreparacion = null)
     {
         // Cambiamos el estado del pedido
         $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET estado = :estado, hora_fin = :hora_fin WHERE id = :id");
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET estado = :estado, hora_fin = :hora_fin, tiempo_estimado = :tiempo_estimado WHERE id = :id");
 
         if ($nuevoEstadoPedido === 'Listo para servir') {
             $horaFin = new DateTime('now');
@@ -176,9 +177,16 @@ class Pedido
         } else {
             $horaFormateada = NULL;
         }
+        
+        if ($pedido->tiempo_estimado !== null) {
+            if (self::compararTiempos($tiempoPreparacion, $pedido->tiempo_estimado) > 0) {
+                $tiempoPreparacion = $pedido->tiempo_estimado;
+            }
+        }
 
         $consulta->bindValue(':estado', $nuevoEstadoPedido, PDO::PARAM_STR);
         $consulta->bindValue(':hora_fin', $horaFormateada, PDO::PARAM_STR);
+        $consulta->bindValue(':tiempo_estimado', $tiempoPreparacion);
         $consulta->bindValue(':id', $pedido->id, PDO::PARAM_INT);
         $consulta->execute();
     }

@@ -169,7 +169,12 @@ class PedidoController extends Pedido implements IApiUsable
         $proceso = $args['proceso'];
         $idPedido = $parametros['idPedido'];
         $idProducto = $parametros['idProducto'];
-        $tiempoPreparacion = $parametros['tiempoPreparacion'];
+
+        if (isset($parametros['tiempoPreparacion'])) {
+            $tiempoPreparacion = $parametros['tiempoPreparacion'];
+        } else {
+            $tiempoPreparacion = null;
+        }
 
         $pedidoAPreparar = Pedido::obtenerPedido($idPedido);
         
@@ -219,7 +224,7 @@ class PedidoController extends Pedido implements IApiUsable
                         $nuevoEstadoPedido = $this->VerificarFinalizacion($pedidoAPreparar);
 
                         // Cambio el estado del pedido en la tabla pedidos
-                        Pedido::Preparar($pedidoAPreparar, $nuevoEstadoPedido);
+                        Pedido::Preparar($pedidoAPreparar, $nuevoEstadoPedido, $tiempoPreparacion);
 
                         $mensaje = 'Se realizo el procedimiento del producto correctamente';
                         break;
