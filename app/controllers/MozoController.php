@@ -35,4 +35,23 @@ class MozoController
         $response->getBody()->write($payload);
         return $response->withHeader('Content-Type', 'application/json');
     }
+
+    public function ActualizarMesa($request, $response, $args)
+    {
+        $parametros = $request->getParsedBody();
+
+        $idPedido = $parametros['idPedido'];
+        $idMesa = $parametros['idMesa'];
+
+        $mesa = Mesa::obtenerMesa($idMesa);
+
+
+
+
+
+
+
+
+
+    }
 }

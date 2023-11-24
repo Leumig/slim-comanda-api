@@ -15,14 +15,18 @@ class UsuarioController extends Usuario implements IApiUsable
         $nombre = $parametros['nombre'];
         $apellido = $parametros['apellido'];
 
+        // Hasheamos la contraseña
+        $claveHasheada = password_hash($clave, PASSWORD_DEFAULT);
+
         // Creamos el usuario
         $usuarioNuevo = new Usuario();
         $usuarioNuevo->usuario = $usuario;
-        $usuarioNuevo->clave = $clave;
+        $usuarioNuevo->clave = $claveHasheada;
         $usuarioNuevo->rol = $rol;
         $usuarioNuevo->email = $email;
         $usuarioNuevo->nombre = $nombre;
         $usuarioNuevo->apellido = $apellido;
+        $usuarioNuevo->fecha_alta = date('Y-m-d H:i:s');
 
         $respuesta = $usuarioNuevo->crearUsuario();
 

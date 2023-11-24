@@ -31,14 +31,21 @@ class JWTController
     {
         $retorno = false;
         $lista = Usuario::obtenerTodos();
-
+    
         foreach ($lista as $usuario) {
-            if ($usuarioRecibido === $usuario->usuario && $claveRecibida === $usuario->clave &&
-                $sectorRecibido === $usuario->rol && $usuario->estado !== 'Eliminado') {
+            $hashAlmacenado = $usuario->clave;
+    
+            if (
+                $usuarioRecibido === $usuario->usuario &&
+                password_verify($claveRecibida, $hashAlmacenado) &&
+                $sectorRecibido === $usuario->rol &&
+                $usuario->estado !== 'Eliminado'
+            ) {
                 $retorno = true;
+                break;
             }
         }
-
+    
         return $retorno;
     }
 }

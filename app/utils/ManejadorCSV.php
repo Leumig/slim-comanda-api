@@ -2,58 +2,35 @@
 
 class ManejadorCSV
 {
-    public static function Leer()
+    public static function Cargar($contenido)
     {
         try {
-            $ruta = './data/usuarios.csv';
-            $respuesta = 'No se pudo cargar ningun dato';
-            $datos = [];
-            $archivo = fopen($ruta, 'r');
-            $header = fgetcsv($archivo);
-
+            $respuesta = 'No se pudieron cargar los datos';
             self::reiniciarTabla();
-            
-            while (($datos = fgetcsv($archivo)) !== false)
-            {
-                if (count($datos) >= 6)
-                {
-                    $nuevoElemento = Usuario::crearPorCampos($datos);
 
-                    if ($nuevoElemento !== null) {
-                        $respuesta = 'Se cargaron los datos y se actualizo la base de datos';
-                    }
-                }
+            $filas = preg_split('/\r\n|\r|\n/', $contenido);
+
+            array_shift($filas); // Borro el primer elemento del array (el encabezado)
+
+            foreach ($filas as $fila) {
+                echo "Fila: $fila\n";
+            
+                $fila = preg_replace('/"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})""/', '$1', $fila);
+                $fila = trim($fila, '"');
+            
+                $columnas = str_getcsv($fila, ',', '"', '\\');
+            
+                Usuario::crearPorCampos($columnas);
             }
-        
-            fclose($archivo);
+            
+            
+
+            $respuesta = 'Se cargaron los datos y se actualizo la base de datos';
         } catch (Exception $e) {
-            throw $e;
+            $respuesta = $e->getMessage();
         }
 
         return $respuesta;
-    }
-
-    public static function Guardar($datos)
-    {
-        try {
-            $ruta = './data/usuarios.csv';
-            $archivo = fopen($ruta, 'w');
-        
-            // Si el archivo esta vacio, le escribo el encabezado
-            if (filesize($ruta) === 0) {
-                $encabezado = ['id', 'usuario', 'clave', 'rol', 'email', 'nombre', 'apellido', 'estado'];
-                fputcsv($archivo, $encabezado);
-            }
-            
-            foreach ($datos as $usuario) {
-                $datosArray = get_object_vars($usuario);
-                fputcsv($archivo, $datosArray);
-            }
-        
-            fclose($archivo);
-        } catch (Exception $e) {
-            throw $e;
-        }
     }
 
     private static function reiniciarTabla()

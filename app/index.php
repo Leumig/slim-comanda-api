@@ -117,6 +117,10 @@ $app->group('/accionesMozos', function (RouteCollectorProxy $group) {
     $group->post('/asociarFoto', \MozoController::class . ':AsociarFoto')
     ->add(new AuthMiddleware('Mozo'))
     ->add(new ParamsMiddleware(['idMesa', 'idPedido']));
+
+    $group->post('/actualizarMesa', \MozoController::class . ':ActualizarMesa')
+    ->add(new AuthMiddleware('Mozo'))
+    ->add(new ParamsMiddleware(['idMesa']));
 });
 
 // Acciones de Clientes
@@ -132,12 +136,12 @@ $app->group('/auth', function (RouteCollectorProxy $group) {
 })
 ->add(new ParamsMiddleware(['usuario', 'clave', 'sector']));
 
-// Importar/Exportar CSV
+// Cargar/Descargar CSV
 $app->group('/csv', function (RouteCollectorProxy $group) {
-    $group->post('/guardarUsuarios', \CSVController::class . ':GuardarDatos');
     $group->post('/cargarUsuarios', \CSVController::class . ':CargarDatos');
-})
-->add(new AuthMiddleware('Socio'));
+    $group->get('/descargarUsuarios', \CSVController::class . ':DescargarDatos');
+});
+// ->add(new AuthMiddleware('Socio'));
 
 
 $app->get('[/]', function (Request $request, Response $response) {
