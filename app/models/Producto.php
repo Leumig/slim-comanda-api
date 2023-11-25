@@ -8,6 +8,7 @@ class Producto
     public $seccion;
     public $precio;
     public $estado;
+    public $tiempo_estimado;
 
     public function crearProducto()
     {
@@ -15,7 +16,7 @@ class Producto
 
         try {
             $objAccesoDatos = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO productos (descripcion, tipo, seccion, precio, estado) VALUES (:descripcion, :tipo, :seccion, :precio, :estado)");
+            $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO productos (descripcion, tipo, seccion, precio, estado, tiempo_estimado) VALUES (:descripcion, :tipo, :seccion, :precio, :estado, :tiempo_estimado)");
     
             $estado = 'Activo';
             $consulta->bindValue(':descripcion', $this->descripcion, PDO::PARAM_STR);
@@ -23,6 +24,7 @@ class Producto
             $consulta->bindValue(':seccion', $this->seccion, PDO::PARAM_STR);
             $consulta->bindValue(':precio', $this->precio);
             $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+            $consulta->bindValue(':tiempo_estimado', $this->tiempo_estimado);
             $consulta->execute();
 
             $retorno = $objAccesoDatos->obtenerUltimoId();
@@ -36,7 +38,7 @@ class Producto
     public static function obtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, descripcion, tipo, seccion, precio, estado FROM productos WHERE estado != 'Eliminado'");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, descripcion, tipo, seccion, precio, estado, tiempo_estimado FROM productos WHERE estado != 'Eliminado'");
         $consulta->execute();
 
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Producto');
@@ -45,14 +47,14 @@ class Producto
     public static function obtenerProducto($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, descripcion, tipo, seccion, precio, estado FROM productos WHERE id = :id AND estado != 'Eliminado'");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, descripcion, tipo, seccion, precio, estado, tiempo_estimado FROM productos WHERE id = :id AND estado != 'Eliminado'");
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
 
         return $consulta->fetchObject('Producto');
     }
 
-    public static function modificarProducto($id, $descripcion, $tipo, $seccion, $precio, $estado)
+    public static function modificarProducto($id, $descripcion, $tipo, $seccion, $precio, $estado, $tiempo_estimado)
     {
         $retorno = 'Error al modificar Producto';
 
@@ -60,13 +62,14 @@ class Producto
             if (self::obtenerProducto($id))
             {
                 $objAccesoDato = AccesoDatos::obtenerInstancia();
-                $consulta = $objAccesoDato->prepararConsulta("UPDATE productos SET descripcion = :descripcion, tipo = :tipo, seccion = :seccion, precio = :precio, estado = :estado WHERE id = :id");
+                $consulta = $objAccesoDato->prepararConsulta("UPDATE productos SET descripcion = :descripcion, tipo = :tipo, seccion = :seccion, precio = :precio, estado = :estado, tiempo_estimado = :tiempo_estimado WHERE id = :id");
         
                 $consulta->bindValue(':descripcion', $descripcion, PDO::PARAM_STR);
                 $consulta->bindValue(':tipo', $tipo, PDO::PARAM_STR);
                 $consulta->bindValue(':seccion', $seccion, PDO::PARAM_STR);
                 $consulta->bindValue(':precio', $precio);
                 $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+                $consulta->bindValue(':tiempo_estimado', $tiempo_estimado);
                 $consulta->bindValue(':id', $id, PDO::PARAM_INT);
                 $consulta->execute();
 
@@ -135,6 +138,8 @@ class Producto
 
         return $listaProductos;
     }
+
+    
 
     public static function Preparar($pedido, $idProducto, $nuevoEstadoProducto, $tiempoPreparacion)
     {

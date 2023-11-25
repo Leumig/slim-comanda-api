@@ -19,14 +19,21 @@ class MozoController
         $respuesta = 'No se logro asociar la foto de la mesa al pedido';
 
         try {
-            $objAccesoDato = AccesoDatos::obtenerInstancia();
-            $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET foto_mesa = :foto_mesa WHERE id = :id");
-    
-            $consulta->bindValue(':foto_mesa', $fotoMesa, PDO::PARAM_STR);
-            $consulta->bindValue(':id', $idPedido, PDO::PARAM_INT);
-            $consulta->execute();
+            $pedido = Pedido::obtenerPedido($idPedido);
 
-            $respuesta = 'Se asocio correctamente la foto de la mesa al pedido';
+            if (is_a($pedido, 'Pedido') && $pedido->id_mesa == $idMesa)
+            {
+                $objAccesoDato = AccesoDatos::obtenerInstancia();
+                $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET foto_mesa = :foto_mesa WHERE id = :id");
+        
+                $consulta->bindValue(':foto_mesa', $fotoMesa, PDO::PARAM_STR);
+                $consulta->bindValue(':id', $idPedido, PDO::PARAM_INT);
+                $consulta->execute();
+    
+                $respuesta = 'Se asocio correctamente la foto de la mesa al pedido';
+            } else {
+                $respuesta = 'Ese pedido no existe o no tiene asociada esta mesa';
+            }
         } catch (Exception $e) {
             $respuesta = 'Error: ' . $e->getMessage();
         }
@@ -44,13 +51,6 @@ class MozoController
         $idMesa = $parametros['idMesa'];
 
         $mesa = Mesa::obtenerMesa($idMesa);
-
-
-
-
-
-
-
 
 
     }

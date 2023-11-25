@@ -6,6 +6,10 @@ class Mesa
     public $estado;
     public $codigo;
     public $foto;
+    public $codigo_pedido;
+    public $facturacion_total;
+    public $facturacion_mayor;
+    public $usos;
 
     public function crearMesa()
     {
@@ -122,5 +126,20 @@ class Mesa
         }
 
         return $retorno;
+    }
+    
+    public static function ActualizarMesa($nuevoEstado, $pedido)
+    {
+        $idMesa = $pedido->id_mesa;
+        $mesa = Mesa::obtenerMesa($idMesa);
+
+        if (is_a($mesa, 'Mesa'))
+        {
+            $objAccesoDato = AccesoDatos::obtenerInstancia();
+            $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET estado = :estado WHERE id = :id");
+            $consulta->bindValue(':estado', $nuevoEstado, PDO::PARAM_STR);
+            $consulta->bindValue(':id', $idMesa, PDO::PARAM_INT);
+            $consulta->execute();
+        }
     }
 }

@@ -19,7 +19,6 @@ require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
 require_once './controllers/JWTController.php';
 require_once './controllers/CSVController.php';
-require_once './controllers/MozoController.php';
 require_once './controllers/ClienteController.php';
 // require_once './middlewares/LoggerMiddleware.php'; // Ahora ya no lo necesitamos
 require_once './middlewares/AuthMiddleware.php';
@@ -65,10 +64,10 @@ $app->group('/productos', function (RouteCollectorProxy $group) {
     $group->get('[/]', \ProductoController::class . ':TraerTodos');
     $group->get('/{id}', \ProductoController::class . ':TraerUno');
     $group->post('[/]', \ProductoController::class . ':CargarUno')
-    ->add(new ParamsMiddleware(['descripcion', 'tipo', 'seccion', 'precio']));
+    ->add(new ParamsMiddleware(['descripcion', 'tipo', 'seccion', 'precio', 'tiempoEstimado']));
 
     $group->put('/{id}', \ProductoController::class . ':ModificarUno')
-    ->add(new ParamsMiddleware(['descripcion', 'tipo', 'seccion', 'precio', 'estado']));
+    ->add(new ParamsMiddleware(['descripcion', 'tipo', 'seccion', 'precio', 'estado', 'tiempoEstimado']));
     
     $group->delete('/{id}', \ProductoController::class . ':BorrarUno');
 })
@@ -112,14 +111,18 @@ $app->group('/accionesPedidos', function (RouteCollectorProxy $group) {
     ->add(new ParamsMiddleware(['idProducto', 'tiempoPreparacion', 'idPedido']));
 });
 
-// Acciones de Mozos
-$app->group('/accionesMozos', function (RouteCollectorProxy $group) {
-    $group->post('/asociarFoto', \MozoController::class . ':AsociarFoto')
+// Acciones de Mesas
+$app->group('/accionesMesas', function (RouteCollectorProxy $group) {
+    $group->post('/asociarFoto', \MesaController::class . ':AsociarFoto')
     ->add(new AuthMiddleware('Mozo'))
     ->add(new ParamsMiddleware(['idMesa', 'idPedido']));
 
-    $group->post('/actualizarMesa', \MozoController::class . ':ActualizarMesa')
+    $group->post('/cobrarMesa', \MesaController::class . ':CobrarMesa')
     ->add(new AuthMiddleware('Mozo'))
+    ->add(new ParamsMiddleware(['idMesa']));
+
+    $group->post('/cerrarMesa', \MesaController::class . ':CerrarMesa')
+    ->add(new AuthMiddleware('Socio'))
     ->add(new ParamsMiddleware(['idMesa']));
 });
 

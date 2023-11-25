@@ -22,8 +22,6 @@ class ManejadorCSV
             
                 Usuario::crearPorCampos($columnas);
             }
-            
-            
 
             $respuesta = 'Se cargaron los datos y se actualizo la base de datos';
         } catch (Exception $e) {

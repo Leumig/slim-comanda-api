@@ -15,6 +15,13 @@ class PedidoController extends Pedido implements IApiUsable
         $estado = $parametros['estado'];
         $productos = $parametros['producto'];
 
+        if (!$this->VerificarMesaDisponible($id_mesa))
+        {
+            $payload = json_encode(array("mensaje" => "Esa mesa no existe o no esta disponible"));
+            $response->getBody()->write($payload);
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
         // Creamos el Pedido
         $pedido = new Pedido();
         $pedido->id_mesa = $id_mesa;
@@ -22,7 +29,7 @@ class PedidoController extends Pedido implements IApiUsable
         $pedido->codigo = $codigo;
         $pedido->nombre_cliente = $nombre_cliente;
         $pedido->estado = $estado;
-        
+
         $respuesta = $pedido->crearPedido($productos);
 
         $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
@@ -35,6 +42,7 @@ class PedidoController extends Pedido implements IApiUsable
                 $idProducto = $producto['id_producto'];
                 $cantidad = $producto['cantidad'];
                 $this->AsociarProductoPedido($respuesta, $idProducto, $cantidad);
+                $this->AsociarMesaPedido($codigo, $id_mesa);
             }
         } else {
             $payload = json_encode(array("error" => $respuesta));
@@ -53,6 +61,25 @@ class PedidoController extends Pedido implements IApiUsable
         $consulta->bindValue(':id_producto', $idProducto, PDO::PARAM_INT);
         $consulta->bindValue(':cantidad', $cantidad, PDO::PARAM_INT);
         $consulta->execute();
+    }
+    
+    private function AsociarMesaPedido($codigoPedido, $idMesa)
+    {
+        $mesa = Mesa::obtenerMesa($idMesa);
+
+        if (is_a($mesa, 'Mesa'))
+        {
+            $objAccesoDatos = AccesoDatos::obtenerInstancia();
+            $consulta = $objAccesoDatos->prepararConsulta("UPDATE mesas SET codigo_pedido = :codigo_pedido, estado = :estado, usos = :usos WHERE id = :id");
+    
+            $nuevoEstado = 'Con cliente esperando pedido';
+            $usos = $mesa->usos + 1;
+            $consulta->bindValue(':codigo_pedido', $codigoPedido, PDO::PARAM_INT);
+            $consulta->bindValue(':estado', $nuevoEstado, PDO::PARAM_STR);
+            $consulta->bindValue(':usos', $usos);
+            $consulta->bindValue(':id', $idMesa, PDO::PARAM_INT);
+            $consulta->execute();
+        }
     }
 
     public function TraerUno($request, $response, $args)
@@ -224,7 +251,7 @@ class PedidoController extends Pedido implements IApiUsable
                         $nuevoEstadoPedido = $this->VerificarFinalizacion($pedidoAPreparar);
 
                         // Cambio el estado del pedido en la tabla pedidos
-                        Pedido::Preparar($pedidoAPreparar, $nuevoEstadoPedido, $tiempoPreparacion);
+                        Pedido::Preparar($pedidoAPreparar, $nuevoEstadoPedido);
 
                         $mensaje = 'Se realizo el procedimiento del producto correctamente';
                         break;
@@ -279,7 +306,7 @@ class PedidoController extends Pedido implements IApiUsable
         }
 
         if ($finalizado) {
-            $nuevoEstadoPedido = 'Listo para Servir';
+            $nuevoEstadoPedido = 'Listo para servir';
         } else if ($enPreparacion) {
             $nuevoEstadoPedido = 'En preparacion';
         } else {
@@ -287,5 +314,21 @@ class PedidoController extends Pedido implements IApiUsable
         }
         
         return $nuevoEstadoPedido;
+    }
+
+    private function VerificarMesaDisponible($id_mesa)
+    {
+        $retorno = false;
+        $mesas = Mesa::obtenerTodos();
+
+        if ($mesas !== null && count($mesas) > 0) {
+            foreach ($mesas as $mesa) {
+                if ($mesa->id == $id_mesa && $mesa->estado == 'Cerrada') {
+                    $retorno = true;
+                }
+            }
+        }
+
+        return $retorno;
     }
 }
