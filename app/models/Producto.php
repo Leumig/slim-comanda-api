@@ -141,27 +141,45 @@ class Producto
 
     
 
-    public static function Preparar($pedido, $idProducto, $nuevoEstadoProducto, $tiempoPreparacion)
+    public static function Preparar($pedido, $idProducto, $nuevoEstadoProducto, $tiempoPreparacion = null)
     {
-        // Cambiamos el estado del producto
         $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos_productos SET tiempo_preparacion = :tiempo_preparacion, estado = :estado, hora_fin = :hora_fin WHERE id_producto = :id_producto AND id_pedido = :id_pedido");
 
-        if ($nuevoEstadoProducto === 'Listo para servir') {
-            $horaFin = new DateTime('now');
-            $horaFormateada = $horaFin->format('Y-m-d H:i:s');
+        if ($tiempoPreparacion !== null)
+        {
+            $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos_productos SET tiempo_preparacion = :tiempo_preparacion, estado = :estado, hora_fin = :hora_fin WHERE id_producto = :id_producto AND id_pedido = :id_pedido");
+    
+            if ($nuevoEstadoProducto === 'Listo para servir') {
+                $horaFin = new DateTime('now');
+                $horaFormateada = $horaFin->format('Y-m-d H:i:s');
+            } else {
+                $horaFormateada = NULL;
+            }
+    
+            $tiempoPreparacion = DateTime::createFromFormat('H:i:s', $tiempoPreparacion);
+            $tiempoFormateado = $tiempoPreparacion->format('H:i:s');
+    
+            $consulta->bindValue(':tiempo_preparacion', $tiempoFormateado);
+            $consulta->bindValue(':estado', $nuevoEstadoProducto, PDO::PARAM_STR);
+            $consulta->bindValue(':hora_fin', $horaFormateada, PDO::PARAM_STR);
+            $consulta->bindValue(':id_producto', $idProducto, PDO::PARAM_INT);
+            $consulta->bindValue(':id_pedido', $pedido->id, PDO::PARAM_INT);
         } else {
-            $horaFormateada = NULL;
+            $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos_productos SET estado = :estado, hora_fin = :hora_fin WHERE id_producto = :id_producto AND id_pedido = :id_pedido");
+    
+            if ($nuevoEstadoProducto === 'Listo para servir') {
+                $horaFin = new DateTime('now');
+                $horaFormateada = $horaFin->format('Y-m-d H:i:s');
+            } else {
+                $horaFormateada = NULL;
+            }
+    
+            $consulta->bindValue(':estado', $nuevoEstadoProducto, PDO::PARAM_STR);
+            $consulta->bindValue(':hora_fin', $horaFormateada, PDO::PARAM_STR);
+            $consulta->bindValue(':id_producto', $idProducto, PDO::PARAM_INT);
+            $consulta->bindValue(':id_pedido', $pedido->id, PDO::PARAM_INT);
         }
 
-        $tiempoPreparacion = DateTime::createFromFormat('H:i:s', $tiempoPreparacion);
-        $tiempoFormateado = $tiempoPreparacion->format('H:i:s');
-
-        $consulta->bindValue(':tiempo_preparacion', $tiempoFormateado);
-        $consulta->bindValue(':estado', $nuevoEstadoProducto, PDO::PARAM_STR);
-        $consulta->bindValue(':hora_fin', $horaFormateada, PDO::PARAM_STR);
-        $consulta->bindValue(':id_producto', $idProducto, PDO::PARAM_INT);
-        $consulta->bindValue(':id_pedido', $pedido->id, PDO::PARAM_INT);
         $consulta->execute();
     }
 }

@@ -183,13 +183,14 @@ class Pedido
         $consulta->execute();
     }
 
+    /*
     public static function obtenerPedidoPorCodigo($codigoPedido)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("SELECT id, id_mesa, id_usuario, codigo, nombre_cliente, estado, monto, tiempo_estimado, hora_inicio, hora_fin FROM pedidos WHERE codigo = :codigo AND estado != 'Eliminado'");
-        $consulta->bindValue(':codigo_pedido', $codigoPedido, PDO::PARAM_STR);
+        $consulta->bindValue(':codigo', $codigoPedido, PDO::PARAM_STR);
         $consulta->execute();
 
         return $consulta->fetchObject('Pedido');
-    }
+    }*/
 }

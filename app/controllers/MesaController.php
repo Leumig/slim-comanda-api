@@ -125,9 +125,8 @@ class MesaController extends Mesa implements IApiUsable
         $respuesta = 'No se logro cobrar la mesa';
 
         try {
-            if (is_a($mesa, 'Mesa' && $mesa->estado == 'Con cliente comiendo')) {
+            if (is_a($mesa, 'Mesa') && $mesa->estado == 'Con cliente comiendo') {
                 $estadoNuevo = 'Con cliente pagando';
-                $pedido = Pedido::obtenerPedidoPorCodigo($mesa->codigo_pedido);
 
                 $objAccesoDato = AccesoDatos::obtenerInstancia();
                 $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET estado = :estado WHERE id = :id");
@@ -136,7 +135,7 @@ class MesaController extends Mesa implements IApiUsable
                 $consulta->bindValue(':id', $idMesa, PDO::PARAM_INT);
                 $consulta->execute();
     
-                $respuesta = 'Se cobro la mesa correctamente, monto total: ' . $pedido->monto;
+                $respuesta = 'Se cobro la mesa correctamente';
             } else {
                 $respuesta = 'Esa mesa no existe o no esta disponible para cobrarse';
 
@@ -158,13 +157,15 @@ class MesaController extends Mesa implements IApiUsable
         $respuesta = 'No se logro cerrar la mesa';
 
         try {
-            if (is_a($mesa, 'Mesa' && $mesa->estado == 'Con cliente pagando')) {
+            if (is_a($mesa, 'Mesa') && $mesa->estado == 'Con cliente pagando') {
                 $estadoNuevo = 'Cerrada';
 
                 $objAccesoDato = AccesoDatos::obtenerInstancia();
-                $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET estado = :estado WHERE id = :id");
+                $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET estado = :estado, codigo_pedido = :codigo_pedido WHERE id = :id");
         
+                $codigo = NULL;
                 $consulta->bindValue(':estado', $estadoNuevo, PDO::PARAM_STR);
+                $consulta->bindValue(':codigo_pedido', $codigo);
                 $consulta->bindValue(':id', $idMesa, PDO::PARAM_INT);
                 $consulta->execute();
     

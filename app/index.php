@@ -108,7 +108,7 @@ $app->group('/accionesPedidos', function (RouteCollectorProxy $group) {
 
     $group->post('/{proceso}', \PedidoController::class . ':ProcesarPreparacion')
     ->add(new AuthMiddleware('Cocina', 'Barra', 'Cerveceria'))
-    ->add(new ParamsMiddleware(['idProducto', 'tiempoPreparacion', 'idPedido']));
+    ->add(new ParamsMiddleware(['idProducto', 'idPedido']));
 });
 
 // Acciones de Mesas
