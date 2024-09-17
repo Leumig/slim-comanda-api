@@ -133,7 +133,7 @@ $app->group('/accionesClientes', function (RouteCollectorProxy $group) {
     ->add(new ParamsMiddleware(['codigoPedido']));
 });
 
-// Autenticacion
+// Autenticación
 $app->group('/auth', function (RouteCollectorProxy $group) {
     $group->post('/login', \JWTController::class . ':SolicitarToken');
 })
