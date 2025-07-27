@@ -27,7 +27,7 @@ Así se ve la colección de consultas realizadas en Postman (archivo importable 
     Clonar el repositorio con el siguiente comando, o descargar el ZIP.
    
     ```bash
-    git clone https://github.com/Leumig/la-comanda-api.git
+    git clone https://github.com/miguecode/la-comanda-api.git
 
 2. **Instalar dependencias**:
 
@@ -73,4 +73,4 @@ Así se ve la colección de consultas realizadas en Postman (archivo importable 
 - El proyecto está bajo la licencia MIT.
 
 ## 🗃️ Otros proyectos similares
-- [El Hotel - API con Slim](https://github.com/Leumig/slim-hotel-api)
+- [El Hotel - API con Slim](https://github.com/miguecode/slim-hotel-api)
